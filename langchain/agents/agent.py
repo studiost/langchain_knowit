@@ -39,6 +39,44 @@ from langchain.utilities.asyncio import asyncio_timeout
 
 logger = logging.getLogger(__name__)
 
+"""
+定义了一个名为BaseSingleActionAgent的类，继承自BaseModel。该类定义了多个方法和属性，具体功能如下：
+
+- return_values(): 返回一个列表，其中包含代理的输出值。
+- get_allowed_tools(): 返回一个可选的列表，其中包含代理允许使用的工具。
+- plan(): 抽象方法，根据输入决定下一步要执行的操作。接受以下参数：
+
+    - intermediate_steps: LLM到目前为止所采取的步骤及其观察结果。
+    - callbacks: 要运行的回调。
+    - **kwargs: 用户输入。
+    
+  返回一个指定要使用哪个工具的动作。
+  
+- aplan(): 抽象方法，异步版本的plan()方法。
+- input_keys(): 抽象方法，返回输入键的列表。
+- return_stopped_response(): 当代理由于达到最大迭代次数而被停止时返回响应。接受以下参数：
+
+    - early_stopping_method: 停止方法，可以是"force"或其他值。
+    - intermediate_steps: LLM到目前为止所采取的步骤及其观察结果。
+    - **kwargs: 用户输入。
+    
+  如果停止方法为"force"，则返回一个包含常量字符串的AgentFinish对象。
+  
+- from_llm_and_tools(): 抽象方法，从语言模型和工具序列创建一个BaseSingleActionAgent对象。接受以下参数：
+
+    - llm: 语言模型对象。
+    - tools: BaseTool对象的序列。
+    - callback_manager: BaseCallbackManager对象，可选。
+    - **kwargs: 任意其他参数。
+    
+- _agent_type(): 抽象方法，返回代理类型的标识符。
+- dict(): 返回代理的字典表示形式，包括一个"_type"属性，其值为代理类型的字符串表示形式。
+- save(): 将代理保存到文件中。接受以下参数：
+
+    - file_path: 要保存代理的文件路径。
+    
+- tool_run_logging_kwargs(): 返回一个字典，其中包含有关工具运行的日志记录参数。
+"""
 
 class BaseSingleActionAgent(BaseModel):
     """Base Agent class."""
@@ -171,6 +209,102 @@ class BaseSingleActionAgent(BaseModel):
     def tool_run_logging_kwargs(self) -> Dict:
         return {}
 
+"""
+该类为基础智能体类，继承自BaseModel类。
+
+@property
+return_values(self) -> List[str]:
+    返回智能体的返回值。返回一个字符串列表，列表中包含一个字符串"output"。
+
+def get_allowed_tools(self) -> Optional[List[str]]:
+    返回工具列表。没有实现，返回None。
+
+@abstractmethod
+plan(
+    self,
+    intermediate_steps: List[Tuple[AgentAction, str]],
+    callbacks: Callbacks = None,
+    **kwargs: Any,
+) -> Union[List[AgentAction], AgentFinish]:
+    抽象方法。给定输入，决定做什么。
+
+    Args:
+        intermediate_steps: 到目前为止LLM已经采取的步骤，以及观察结果。
+        callbacks: 要运行的回调函数。
+        **kwargs: 用户输入。
+
+    Returns:
+        指定使用的工具的动作列表。
+
+@abstractmethod
+async def aplan(
+    self,
+    intermediate_steps: List[Tuple[AgentAction, str]],
+    callbacks: Callbacks = None,
+    **kwargs: Any,
+) -> Union[List[AgentAction], AgentFinish]:
+    抽象方法。给定输入，决定做什么。
+
+    Args:
+        intermediate_steps: 到目前为止LLM已经采取的步骤，以及观察结果。
+        callbacks: 要运行的回调函数。
+        **kwargs: 用户输入。
+
+    Returns:
+        指定使用的工具的动作列表。
+
+@property
+@abstractmethod
+input_keys(self) -> List[str]:
+    返回输入键列表。私有属性。
+
+def return_stopped_response(
+    self,
+    early_stopping_method: str,
+    intermediate_steps: List[Tuple[AgentAction, str]],
+    **kwargs: Any,
+) -> AgentFinish:
+    当智能体由于达到最大迭代次数而被停止时返回响应。
+
+    Args:
+        early_stopping_method: 早期停止方法。
+        intermediate_steps: 到目前为止LLM已经采取的步骤，以及观察结果。
+        **kwargs: 用户输入。
+
+    Returns:
+        包含输出和其他信息的AgentFinish对象。
+
+@property
+def _agent_type(self) -> str:
+    返回智能体类型的标识符。抛出NotImplementedError。
+
+def dict(self, **kwargs: Any) -> Dict:
+    返回智能体的字典表示。
+
+    Args:
+        **kwargs: 其他关键字参数。
+
+    Returns:
+        包含智能体信息的字典。
+
+def save(self, file_path: Union[Path, str]) -> None:
+    保存智能体。
+
+    Args:
+        file_path: 保存智能体的文件路径。
+
+    Example:
+    .. code-block:: python
+
+        # If working with agent executor
+        agent.agent.save(file_path="path/agent.yaml")
+
+    Raises:
+        ValueError: 如果文件格式不是json或yaml。
+
+def tool_run_logging_kwargs(self) -> Dict:
+    返回工具运行日志的关键字参数。返回一个空字典。
+"""
 
 class BaseMultiActionAgent(BaseModel):
     """Base Agent class."""
